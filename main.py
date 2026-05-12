@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from services.document_parser import DocumentParser
 from services.extraction_agent import ExtractionAgent
+from services.routing_engine import RoutingEngine
 
 # Load environment variables
 load_dotenv()
@@ -19,25 +20,32 @@ def main():
     try:
         print(f"Parsing file: {sample_pdf_path}")
         extracted_text = parser.parse_file(sample_pdf_path)
-        
-        print('\n--- Extraction Preview (First 500 characters) ---')
-        print(extracted_text[:500])
-        print('\n--- Extraction Successful ---')
         print(f"Total extracted length: {len(extracted_text)} characters.")
         
-        print('\n--- Phase 3: Testing AI Extraction Engine ---')
-        # Initialize the AI Agent
+        print('\n--- Phase 3 & 4: AI Extraction and Routing ---')
         agent = ExtractionAgent()
+        router = RoutingEngine()
         
         print("Sending raw text to AI for structured extraction...")
-        # In a real run, this requires OPENAI_API_KEY to be set in .env
         if not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_API_KEY") == "your_openai_key_here":
-            print("⚠️ WARNING: OPENAI_API_KEY is not set in .env. Skipping actual API call to prevent crash.")
-            print("Please add your API key to the .env file to see the AI extraction in action.")
+            print("⚠️ WARNING: OPENAI_API_KEY is not set in .env.")
+            print("To see the full pipeline, please add your API key.")
         else:
-            result = agent.extract_claim_data(extracted_text)
-            print("\n--- AI Extraction Result (JSON) ---")
-            print(result.model_dump_json(indent=2))
+            # Phase 3: Extract
+            ai_result = agent.extract_claim_data(extracted_text)
+            print("✅ Data Extracted Successfully.")
+            
+            # Phase 4: Route
+            print("Applying Business Routing Rules...")
+            final_output = router.evaluate(ai_result)
+            
+            print("\n================ FINAL CLAIM REPORT ================")
+            print(f"Routing Decision: {final_output.recommendedRoute.value}")
+            print(f"Reasoning: {final_output.reasoning}")
+            print(f"Missing Fields: {len(final_output.missingFields)}")
+            print("==================================================\n")
+            print("Full JSON Payload for Frontend:")
+            print(final_output.model_dump_json(indent=2))
         
     except Exception as e:
         print(f"Error during execution: {e}")
