@@ -1,5 +1,7 @@
 # ClaimSense — Autonomous Insurance Claims Platform
 
+**Live Demo:** [https://claimsense-pl50.onrender.com/](https://claimsense-pl50.onrender.com/)
+
 ClaimSense is a production-oriented, AI-augmented claims processing platform that automates the full lifecycle of a First Notice of Loss (FNOL) document — from raw file ingestion through structured data extraction, deterministic business-rule evaluation, and final queue routing. The system is designed around a strict separation between probabilistic inference (AI) and deterministic decision-making (rules engine), ensuring regulatory auditability without sacrificing processing throughput.
 
 ---
