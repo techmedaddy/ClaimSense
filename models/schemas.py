@@ -3,16 +3,16 @@ from pydantic import BaseModel, Field
 from enum import Enum
 
 class PolicySchema(BaseModel):
-    policyNumber: str = Field(description="Policy number as shown on the document")
-    policyholderName: str = Field(description="Full name of the insured/policyholder")
+    policyNumber: Optional[str] = Field(None, description="Policy number as shown on the document")
+    policyholderName: Optional[str] = Field(None, description="Full name of the insured/policyholder")
     effectiveDateStart: Optional[str] = Field(None, description="Policy start date")
     effectiveDateEnd: Optional[str] = Field(None, description="Policy end date")
 
 class IncidentSchema(BaseModel):
-    date: str = Field(description="Date of the incident")
-    time: str = Field(description="Time of the incident")
-    location: str = Field(description="Full address or description of where the loss occurred")
-    description: str = Field(description="Narrative description of what happened")
+    date: Optional[str] = Field(None, description="Date of the incident")
+    time: Optional[str] = Field(None, description="Time of the incident")
+    location: Optional[str] = Field(None, description="Full address or description of where the loss occurred")
+    description: Optional[str] = Field(None, description="Narrative description of what happened")
     authorityContacted: Optional[str] = Field(None, description="Police or Fire department name if contacted")
     reportNumber: Optional[str] = Field(None, description="Authority report number")
 

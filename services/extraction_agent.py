@@ -6,10 +6,6 @@ from models.schemas import ExtractionResultSchema
 
 class ExtractionAgent:
     def __init__(self, api_key: Optional[str] = None):
-        """
-        Initialize the Extraction Agent using NVIDIA NIM (OpenAI compatible).
-        Uses the provided API key or falls back to the NVIDIA_API_KEY environment variable.
-        """
         self._api_key = api_key
         self._client = None
 
@@ -32,23 +28,20 @@ class ExtractionAgent:
         """
 
     def extract_claim_data(self, raw_text: str) -> ExtractionResultSchema:
-        """
-        Takes raw document text and uses Minimax-M2.7 via NVIDIA NIM to extract data.
-        """
-        # Lazy-init the client on first use
+        """Extract structured claim data from raw document text."""
+        # Keep startup independent of API credentials.
         if self._client is None:
             key = self._api_key or os.getenv("NVIDIA_API_KEY")
             if not key:
                 raise RuntimeError("NVIDIA_API_KEY is not set. Please add it to your .env file.")
             
-            # Point the OpenAI client to NVIDIA's API endpoint
             self._client = OpenAI(
                 base_url="https://integrate.api.nvidia.com/v1",
                 api_key=key
             )
 
         try:
-            # We must pass the JSON schema directly in the prompt for standard endpoints
+            # This endpoint does not enforce structured output server-side.
             schema_json = ExtractionResultSchema.model_json_schema()
             
             completion = self._client.chat.completions.create(
@@ -61,16 +54,14 @@ class ExtractionAgent:
                 max_tokens=1024,
             )
 
-            # Extract the string content
             content = completion.choices[0].message.content.strip()
             
-            # Clean up markdown code blocks using regex
+            # Accept fenced JSON from chat-style responses.
             import re
             json_match = re.search(r"```(?:json)?\s*(.*?)\s*```", content, re.DOTALL)
             if json_match:
                 content = json_match.group(1)
             
-            # Parse and validate against our Pydantic model
             parsed_data = json.loads(content)
             return ExtractionResultSchema.model_validate(parsed_data)
 

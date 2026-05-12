@@ -4,7 +4,6 @@ from services.document_parser import DocumentParser
 from services.extraction_agent import ExtractionAgent
 from services.routing_engine import RoutingEngine
 
-# Load environment variables
 load_dotenv()
 
 def main():
@@ -14,7 +13,6 @@ def main():
     print('\n--- Phase 2: Testing Document Ingestion ---')
     parser = DocumentParser()
     
-    # Path to the sample ACORD form
     sample_pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'ACORD-Automobile-Loss-Notice-12.05.16.pdf')
     
     try:
@@ -31,11 +29,9 @@ def main():
             print("⚠️ WARNING: NVIDIA_API_KEY is not set in .env.")
             print("To see the full pipeline, please add your API key.")
         else:
-            # Phase 3: Extract
             ai_result = agent.extract_claim_data(extracted_text)
             print("✅ Data Extracted Successfully.")
             
-            # Phase 4: Route
             print("Applying Business Routing Rules...")
             final_output = router.evaluate(ai_result)
             

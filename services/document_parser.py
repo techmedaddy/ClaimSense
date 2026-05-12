@@ -3,7 +3,7 @@ import pdfplumber
 
 class DocumentParser:
     def parse_file(self, file_path: str) -> str:
-        """Parse a file based on its extension and return its text content."""
+        """Return text content from a supported document."""
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
@@ -16,7 +16,7 @@ class DocumentParser:
             raise ValueError(f"Unsupported file type: {ext}. Only .pdf and .txt are supported.")
 
     def _parse_pdf(self, file_path: str) -> str:
-        """Extract text from a PDF file using pdfplumber."""
+        """Extract text from a PDF file."""
         extracted_text = []
         try:
             with pdfplumber.open(file_path) as pdf:
@@ -29,7 +29,7 @@ class DocumentParser:
             raise RuntimeError(f"Failed to parse PDF: {str(e)}")
 
     def _parse_txt(self, file_path: str) -> str:
-        """Extract text from a standard TXT file."""
+        """Read text from a TXT file."""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 return self._clean_text(f.read())
@@ -37,7 +37,6 @@ class DocumentParser:
             raise RuntimeError(f"Failed to read TXT file: {str(e)}")
 
     def _clean_text(self, raw_text: str) -> str:
-        """Helper function to clean up messy text extraction."""
-        # Normalize newlines and remove excessive empty lines
+        """Normalize parser output."""
         lines = [line.strip() for line in raw_text.split('\n') if line.strip()]
         return "\n".join(lines)

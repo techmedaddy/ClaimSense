@@ -10,7 +10,6 @@
 </head>
 <body>
 
-  <!-- Ambient Background -->
   <div class="ambient-bg" aria-hidden="true">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -18,7 +17,6 @@
   </div>
 
   <div class="app-container">
-    <!-- Header -->
     <header class="app-header">
       <div class="logo">
         <div class="logo-icon">🛡️</div>
@@ -30,9 +28,7 @@
       <div class="header-badge">● System Online</div>
     </header>
 
-    <!-- Main Content -->
     <main class="main-grid">
-      <!-- Left Column: Upload -->
       <section>
         <div class="card" id="upload-card">
           <div class="card-title"><span class="icon">📄</span> Document Upload</div>
@@ -67,7 +63,6 @@
           </div>
         </div>
 
-        <!-- Processing Steps -->
         <div class="card processing-overlay" id="processing-overlay">
           <div class="spinner"></div>
           <div class="processing-steps">
@@ -87,10 +82,8 @@
         </div>
       </section>
 
-      <!-- Right Column: Results -->
       <section class="results-panel" id="results-panel">
 
-        <!-- Route Decision -->
         <div class="route-decision" id="route-decision">
           <div class="route-header">
             <span class="route-label">Routing Decision</span>
@@ -99,9 +92,7 @@
           <div class="route-reasoning" id="route-reasoning"></div>
         </div>
 
-        <!-- Data Grid -->
         <div class="data-grid">
-          <!-- Policy Info -->
           <div class="card">
             <div class="card-title"><span class="icon">📋</span> Policy Information</div>
             <div class="field-group">
@@ -118,7 +109,6 @@
             </div>
           </div>
 
-          <!-- Incident Info -->
           <div class="card">
             <div class="card-title"><span class="icon">🚨</span> Incident Details</div>
             <div class="field-group">
@@ -140,13 +130,11 @@
           </div>
         </div>
 
-        <!-- Missing Fields -->
         <div class="card" style="margin-bottom: 20px;">
           <div class="card-title"><span class="icon">🔍</span> Missing Fields</div>
           <div id="missing-fields-container"></div>
         </div>
 
-        <!-- Parties and Assets -->
         <div class="data-grid">
           <div class="card">
             <div class="card-title"><span class="icon">👥</span> Involved Parties</div>
@@ -159,7 +147,6 @@
           </div>
         </div>
 
-        <!-- JSON Viewer -->
         <div style="margin-top: 24px;">
           <button class="json-toggle" id="json-toggle">
             <span>View Raw JSON Response</span>

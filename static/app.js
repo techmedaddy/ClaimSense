@@ -1,7 +1,3 @@
-/**
- * ClaimSense — Frontend Application Logic
- */
-
 const DOM = {
   uploadZone: document.getElementById('upload-zone'),
   fileInput: document.getElementById('file-input'),
@@ -16,11 +12,9 @@ const DOM = {
   resultsPanel: document.getElementById('results-panel'),
   errorCard: document.getElementById('error-card'),
   errorMsg: document.getElementById('error-msg'),
-  // Steps
   stepParse: document.getElementById('step-parse'),
   stepExtract: document.getElementById('step-extract'),
   stepRoute: document.getElementById('step-route'),
-  // Results
   routeDecision: document.getElementById('route-decision'),
   routeBadge: document.getElementById('route-badge'),
   routeReasoning: document.getElementById('route-reasoning'),
@@ -41,7 +35,7 @@ const DOM = {
 
 let selectedFile = null;
 
-// ========== FILE HANDLING ==========
+// File handling
 
 DOM.browseTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -58,7 +52,6 @@ DOM.fileInput.addEventListener('change', (e) => {
   }
 });
 
-// Drag & Drop
 DOM.uploadZone.addEventListener('dragover', (e) => {
   e.preventDefault();
   DOM.uploadZone.classList.add('drag-over');
@@ -107,22 +100,19 @@ function formatFileSize(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// ========== PROCESSING ==========
+// Processing
 
 DOM.processBtn.addEventListener('click', async () => {
   if (!selectedFile) return;
 
-  // Show processing state
   DOM.uploadCard.style.display = 'none';
   DOM.processingOverlay.classList.add('visible');
   DOM.resultsPanel.classList.remove('visible');
   hideError();
 
-  // Animate steps
   await animateStep(DOM.stepParse, 600);
   await animateStep(DOM.stepExtract, 800);
 
-  // Actual API call
   const formData = new FormData();
   formData.append('file', selectedFile);
 
@@ -139,13 +129,10 @@ DOM.processBtn.addEventListener('click', async () => {
 
     const data = await response.json();
 
-    // Complete step 3
     await animateStep(DOM.stepRoute, 400);
 
-    // Short pause for visual satisfaction
     await sleep(300);
 
-    // Hide processing, show results
     DOM.processingOverlay.classList.remove('visible');
     renderResults(data);
 
@@ -178,7 +165,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ========== ERROR ==========
+// Errors
 
 function showError(msg) {
   DOM.errorMsg.textContent = msg;
@@ -189,13 +176,12 @@ function hideError() {
   DOM.errorCard.classList.remove('visible');
 }
 
-// ========== RENDER RESULTS ==========
+// Results
 
 function renderResults(data) {
   const fields = data.extractedFields;
   const route = data.recommendedRoute;
 
-  // Route Decision
   const routeMap = {
     FAST_TRACK: { class: 'fast-track', label: 'Fast-Track' },
     MANUAL_REVIEW: { class: 'manual-review', label: 'Manual Review' },
@@ -208,14 +194,12 @@ function renderResults(data) {
   DOM.routeBadge.textContent = routeInfo.label;
   DOM.routeReasoning.textContent = data.reasoning;
 
-  // Policy
   DOM.policyNumber.textContent = fields.policy.policyNumber || '—';
   DOM.policyHolder.textContent = fields.policy.policyholderName || '—';
   const start = fields.policy.effectiveDateStart || '—';
   const end = fields.policy.effectiveDateEnd || '—';
   DOM.policyDates.textContent = start !== '—' || end !== '—' ? `${start} → ${end}` : '—';
 
-  // Incident
   DOM.incidentDatetime.textContent = `${fields.incident.date || '—'} at ${fields.incident.time || '—'}`;
   DOM.incidentLocation.textContent = fields.incident.location || '—';
   DOM.incidentDesc.textContent = fields.incident.description || '—';
@@ -223,24 +207,16 @@ function renderResults(data) {
   const report = fields.incident.reportNumber || '';
   DOM.incidentAuthority.textContent = auth || report ? `${auth} ${report ? '(#' + report + ')' : ''}`.trim() : '—';
 
-  // Mark missing
   markMissing(DOM.policyNumber, fields.policy.policyNumber);
   markMissing(DOM.policyHolder, fields.policy.policyholderName);
   markMissing(DOM.incidentLocation, fields.incident.location);
 
-  // Missing Fields
   renderMissingFields(data.missingFields);
-
-  // Parties
   renderParties(fields.involvedParties);
-
-  // Assets
   renderAssets(fields.assets);
 
-  // JSON
   DOM.jsonContent.textContent = JSON.stringify(data, null, 2);
 
-  // Show results
   DOM.resultsPanel.classList.add('visible');
   DOM.uploadCard.style.display = 'block';
 }
@@ -330,14 +306,14 @@ function renderAssets(assets) {
     .join('');
 }
 
-// ========== JSON TOGGLE ==========
+// JSON viewer
 
 DOM.jsonToggle.addEventListener('click', () => {
   DOM.jsonToggle.classList.toggle('expanded');
   DOM.jsonBody.classList.toggle('visible');
 });
 
-// ========== UTIL ==========
+// Utilities
 
 function escapeHtml(str) {
   if (!str) return '';

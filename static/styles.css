@@ -1,4 +1,4 @@
-/* ===== RESET & FOUNDATION ===== */
+/* Base */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after {
@@ -8,7 +8,6 @@
 }
 
 :root {
-  /* Surface */
   --bg-primary: #06060b;
   --bg-secondary: #0d0d14;
   --bg-card: rgba(255, 255, 255, 0.03);
@@ -16,35 +15,29 @@
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-active: rgba(255, 255, 255, 0.12);
 
-  /* Text */
   --text-primary: #f0f0f5;
   --text-secondary: #8b8b9e;
   --text-tertiary: #55556a;
 
-  /* Accent */
   --accent-blue: #3b82f6;
   --accent-cyan: #06b6d4;
   --accent-purple: #8b5cf6;
 
-  /* Status */
   --status-success: #10b981;
   --status-warning: #f59e0b;
   --status-danger: #ef4444;
   --status-info: #3b82f6;
 
-  /* Route colors */
   --route-fast: #10b981;
   --route-manual: #f59e0b;
   --route-investigation: #ef4444;
   --route-specialist: #8b5cf6;
 
-  /* Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
 
-  /* Shadow */
   --shadow-glow: 0 0 80px -20px rgba(59, 130, 246, 0.15);
 }
 
@@ -63,7 +56,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== AMBIENT BACKGROUND ===== */
+/* Background */
 .ambient-bg {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -104,7 +97,7 @@ body {
   66% { transform: translate(-20px, 30px) scale(0.95); }
 }
 
-/* ===== LAYOUT ===== */
+/* Layout */
 .app-container {
   position: relative;
   z-index: 1;
@@ -113,7 +106,7 @@ body {
   padding: 32px 24px;
 }
 
-/* ===== HEADER ===== */
+/* Header */
 .app-header {
   display: flex;
   align-items: center;
@@ -164,7 +157,7 @@ body {
   letter-spacing: 0.3px;
 }
 
-/* ===== MAIN GRID ===== */
+/* Main grid */
 .main-grid {
   display: grid;
   grid-template-columns: 400px 1fr;
@@ -172,7 +165,7 @@ body {
   align-items: start;
 }
 
-/* ===== CARD BASE ===== */
+/* Cards */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -200,7 +193,7 @@ body {
   font-size: 1rem;
 }
 
-/* ===== UPLOAD ZONE ===== */
+/* Upload */
 .upload-zone {
   border: 2px dashed var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -254,7 +247,7 @@ body {
   display: none;
 }
 
-/* File Preview */
+/* File preview */
 .file-preview {
   display: none;
   align-items: center;
@@ -299,7 +292,7 @@ body {
   color: var(--status-danger);
 }
 
-/* Process Button */
+/* Process button */
 .process-btn {
   width: 100%;
   margin-top: 20px;
@@ -335,7 +328,7 @@ body {
   gap: 8px;
 }
 
-/* ===== PROCESSING STATE ===== */
+/* Processing */
 .processing-overlay {
   display: none;
   flex-direction: column;
@@ -404,7 +397,7 @@ body {
   50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
 }
 
-/* ===== RESULTS PANEL ===== */
+/* Results */
 .results-panel {
   display: none;
 }
@@ -418,7 +411,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Route Decision Card */
+/* Route decision */
 .route-decision {
   padding: 28px;
   border-radius: var(--radius-lg);
@@ -498,7 +491,7 @@ body {
   line-height: 1.6;
 }
 
-/* ===== DATA GRID ===== */
+/* Data grid */
 .data-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -506,7 +499,7 @@ body {
   margin-bottom: 24px;
 }
 
-/* Extracted Fields */
+/* Fields */
 .field-group {
   margin-bottom: 16px;
 }
@@ -532,7 +525,7 @@ body {
   font-weight: 400;
 }
 
-/* Missing Fields List */
+/* Missing fields */
 .missing-fields-list {
   list-style: none;
   display: flex;
@@ -648,7 +641,7 @@ body {
   color: var(--status-warning);
 }
 
-/* ===== JSON VIEWER ===== */
+/* JSON viewer */
 .json-toggle {
   width: 100%;
   padding: 12px 20px;
@@ -700,7 +693,7 @@ body {
   word-break: break-all;
 }
 
-/* ===== ERROR STATE ===== */
+/* Errors */
 .error-card {
   display: none;
   padding: 20px;
@@ -722,7 +715,7 @@ body {
   line-height: 1.5;
 }
 
-/* ===== RESPONSIVE ===== */
+/* Responsive */
 @media (max-width: 900px) {
   .main-grid {
     grid-template-columns: 1fr;
@@ -732,7 +725,7 @@ body {
   }
 }
 
-/* ===== SCROLLBAR ===== */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 3px; }
