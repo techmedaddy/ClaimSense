@@ -27,8 +27,8 @@ def main():
         router = RoutingEngine()
         
         print("Sending raw text to AI for structured extraction...")
-        if not os.getenv("GOOGLE_AI_API_KEY"):
-            print("⚠️ WARNING: GOOGLE_AI_API_KEY is not set in .env.")
+        if not os.getenv("NVIDIA_API_KEY"):
+            print("⚠️ WARNING: NVIDIA_API_KEY is not set in .env.")
             print("To see the full pipeline, please add your API key.")
         else:
             # Phase 3: Extract
