@@ -15,7 +15,7 @@ def main():
     parser = DocumentParser()
     
     # Path to the sample ACORD form
-    sample_pdf_path = os.path.join(os.path.dirname(__file__), 'ACORD-Automobile-Loss-Notice-12.05.16.pdf')
+    sample_pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'ACORD-Automobile-Loss-Notice-12.05.16.pdf')
     
     try:
         print(f"Parsing file: {sample_pdf_path}")

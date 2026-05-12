@@ -44,7 +44,7 @@ python app.py
 
 ### 4. Use the Dashboard
 *   Open your browser and navigate to: `http://localhost:8000`
-*   Drag and drop the provided `ACORD-Automobile-Loss-Notice-12.05.16.pdf` into the upload zone.
+*   Drag and drop the provided `data/ACORD-Automobile-Loss-Notice-12.05.16.pdf` into the upload zone.
 *   Click **Analyze Claim** and watch the magic happen.
 
 ## 🧠 Why This Architecture?
