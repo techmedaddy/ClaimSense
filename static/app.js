@@ -1,323 +1,286 @@
-const DOM = {
-  uploadZone: document.getElementById('upload-zone'),
-  fileInput: document.getElementById('file-input'),
-  browseTrigger: document.getElementById('browse-trigger'),
-  filePreview: document.getElementById('file-preview'),
-  fileName: document.getElementById('file-name'),
-  fileSize: document.getElementById('file-size'),
-  removeFile: document.getElementById('remove-file'),
-  processBtn: document.getElementById('process-btn'),
-  processingOverlay: document.getElementById('processing-overlay'),
-  uploadCard: document.getElementById('upload-card'),
-  resultsPanel: document.getElementById('results-panel'),
-  errorCard: document.getElementById('error-card'),
-  errorMsg: document.getElementById('error-msg'),
-  stepParse: document.getElementById('step-parse'),
-  stepExtract: document.getElementById('step-extract'),
-  stepRoute: document.getElementById('step-route'),
-  routeDecision: document.getElementById('route-decision'),
-  routeBadge: document.getElementById('route-badge'),
-  routeReasoning: document.getElementById('route-reasoning'),
-  policyNumber: document.getElementById('policy-number'),
-  policyHolder: document.getElementById('policy-holder'),
-  policyDates: document.getElementById('policy-dates'),
-  incidentDatetime: document.getElementById('incident-datetime'),
-  incidentLocation: document.getElementById('incident-location'),
-  incidentDesc: document.getElementById('incident-desc'),
-  incidentAuthority: document.getElementById('incident-authority'),
-  missingFieldsContainer: document.getElementById('missing-fields-container'),
-  partiesContainer: document.getElementById('parties-container'),
-  assetsContainer: document.getElementById('assets-container'),
-  jsonToggle: document.getElementById('json-toggle'),
-  jsonBody: document.getElementById('json-body'),
-  jsonContent: document.getElementById('json-content'),
-};
+(() => {
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileRemove = document.getElementById('fileRemove');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const processingSteps = document.getElementById('processingSteps');
+    const errorDisplay = document.getElementById('errorDisplay');
+    const errorText = document.getElementById('errorText');
+    const resultsSection = document.getElementById('resultsSection');
 
-let selectedFile = null;
+    let selectedFile = null;
 
-// File handling
+    // --- File Selection ---
 
-DOM.browseTrigger.addEventListener('click', (e) => {
-  e.stopPropagation();
-  DOM.fileInput.click();
-});
+    dropzone.addEventListener('click', () => fileInput.click());
 
-DOM.uploadZone.addEventListener('click', () => {
-  DOM.fileInput.click();
-});
-
-DOM.fileInput.addEventListener('change', (e) => {
-  if (e.target.files.length > 0) {
-    handleFile(e.target.files[0]);
-  }
-});
-
-DOM.uploadZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  DOM.uploadZone.classList.add('drag-over');
-});
-
-DOM.uploadZone.addEventListener('dragleave', () => {
-  DOM.uploadZone.classList.remove('drag-over');
-});
-
-DOM.uploadZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  DOM.uploadZone.classList.remove('drag-over');
-  if (e.dataTransfer.files.length > 0) {
-    handleFile(e.dataTransfer.files[0]);
-  }
-});
-
-DOM.removeFile.addEventListener('click', () => {
-  clearFile();
-});
-
-function handleFile(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (!['pdf', 'txt'].includes(ext)) {
-    showError('Invalid file type. Please upload a PDF or TXT file.');
-    return;
-  }
-  selectedFile = file;
-  DOM.fileName.textContent = file.name;
-  DOM.fileSize.textContent = formatFileSize(file.size);
-  DOM.filePreview.classList.add('visible');
-  DOM.processBtn.disabled = false;
-  hideError();
-}
-
-function clearFile() {
-  selectedFile = null;
-  DOM.fileInput.value = '';
-  DOM.filePreview.classList.remove('visible');
-  DOM.processBtn.disabled = true;
-}
-
-function formatFileSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
-}
-
-// Processing
-
-DOM.processBtn.addEventListener('click', async () => {
-  if (!selectedFile) return;
-
-  DOM.uploadCard.style.display = 'none';
-  DOM.processingOverlay.classList.add('visible');
-  DOM.resultsPanel.classList.remove('visible');
-  hideError();
-
-  await animateStep(DOM.stepParse, 600);
-  await animateStep(DOM.stepExtract, 800);
-
-  const formData = new FormData();
-  formData.append('file', selectedFile);
-
-  try {
-    const response = await fetch('/api/process', {
-      method: 'POST',
-      body: formData,
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('active');
     });
 
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.detail || 'Processing failed');
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('active');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('active');
+        if (e.dataTransfer.files.length) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) {
+            handleFile(fileInput.files[0]);
+        }
+    });
+
+    fileRemove.addEventListener('click', () => {
+        clearFile();
+    });
+
+    function handleFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'txt'].includes(ext)) {
+            showError('Unsupported file type. Please upload a PDF or TXT file.');
+            return;
+        }
+        selectedFile = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatSize(file.size);
+        fileInfo.style.display = 'flex';
+        dropzone.style.display = 'none';
+        analyzeBtn.disabled = false;
+        hideError();
     }
 
-    const data = await response.json();
-
-    await animateStep(DOM.stepRoute, 400);
-
-    await sleep(300);
-
-    DOM.processingOverlay.classList.remove('visible');
-    renderResults(data);
-
-  } catch (err) {
-    DOM.processingOverlay.classList.remove('visible');
-    DOM.uploadCard.style.display = 'block';
-    showError(err.message);
-    resetSteps();
-  }
-});
-
-function animateStep(stepEl, duration) {
-  return new Promise((resolve) => {
-    stepEl.classList.add('active');
-    setTimeout(() => {
-      stepEl.classList.remove('active');
-      stepEl.classList.add('done');
-      resolve();
-    }, duration);
-  });
-}
-
-function resetSteps() {
-  [DOM.stepParse, DOM.stepExtract, DOM.stepRoute].forEach((s) => {
-    s.classList.remove('active', 'done');
-  });
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Errors
-
-function showError(msg) {
-  DOM.errorMsg.textContent = msg;
-  DOM.errorCard.classList.add('visible');
-}
-
-function hideError() {
-  DOM.errorCard.classList.remove('visible');
-}
-
-// Results
-
-function renderResults(data) {
-  const fields = data.extractedFields;
-  const route = data.recommendedRoute;
-
-  const routeMap = {
-    FAST_TRACK: { class: 'fast-track', label: 'Fast-Track' },
-    MANUAL_REVIEW: { class: 'manual-review', label: 'Manual Review' },
-    INVESTIGATION_FLAG: { class: 'investigation', label: 'Investigation' },
-    SPECIALIST_QUEUE: { class: 'specialist', label: 'Specialist Queue' },
-  };
-
-  const routeInfo = routeMap[route] || routeMap.MANUAL_REVIEW;
-  DOM.routeDecision.className = 'route-decision ' + routeInfo.class;
-  DOM.routeBadge.textContent = routeInfo.label;
-  DOM.routeReasoning.textContent = data.reasoning;
-
-  DOM.policyNumber.textContent = fields.policy.policyNumber || '—';
-  DOM.policyHolder.textContent = fields.policy.policyholderName || '—';
-  const start = fields.policy.effectiveDateStart || '—';
-  const end = fields.policy.effectiveDateEnd || '—';
-  DOM.policyDates.textContent = start !== '—' || end !== '—' ? `${start} → ${end}` : '—';
-
-  DOM.incidentDatetime.textContent = `${fields.incident.date || '—'} at ${fields.incident.time || '—'}`;
-  DOM.incidentLocation.textContent = fields.incident.location || '—';
-  DOM.incidentDesc.textContent = fields.incident.description || '—';
-  const auth = fields.incident.authorityContacted || '';
-  const report = fields.incident.reportNumber || '';
-  DOM.incidentAuthority.textContent = auth || report ? `${auth} ${report ? '(#' + report + ')' : ''}`.trim() : '—';
-
-  markMissing(DOM.policyNumber, fields.policy.policyNumber);
-  markMissing(DOM.policyHolder, fields.policy.policyholderName);
-  markMissing(DOM.incidentLocation, fields.incident.location);
-
-  renderMissingFields(data.missingFields);
-  renderParties(fields.involvedParties);
-  renderAssets(fields.assets);
-
-  DOM.jsonContent.textContent = JSON.stringify(data, null, 2);
-
-  DOM.resultsPanel.classList.add('visible');
-  DOM.uploadCard.style.display = 'block';
-}
-
-function markMissing(el, value) {
-  if (!value || value === '—' || value.toLowerCase() === 'n/a' || value.toLowerCase() === 'unknown') {
-    el.classList.add('missing');
-    if (!el.textContent || el.textContent === '—') {
-      el.textContent = 'Not found';
+    function clearFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        dropzone.style.display = '';
+        analyzeBtn.disabled = true;
     }
-  } else {
-    el.classList.remove('missing');
-  }
-}
 
-function renderMissingFields(fields) {
-  if (!fields || fields.length === 0) {
-    DOM.missingFieldsContainer.innerHTML = '<div class="no-missing">✓ All mandatory fields present</div>';
-    return;
-  }
-  const list = document.createElement('ul');
-  list.className = 'missing-fields-list';
-  fields.forEach((f) => {
-    const li = document.createElement('li');
-    li.className = 'missing-tag';
-    li.textContent = f;
-    list.appendChild(li);
-  });
-  DOM.missingFieldsContainer.innerHTML = '';
-  DOM.missingFieldsContainer.appendChild(list);
-}
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
 
-function renderParties(parties) {
-  if (!parties || parties.length === 0) {
-    DOM.partiesContainer.innerHTML = '<div class="field-value missing">No parties extracted</div>';
-    return;
-  }
+    // --- Analysis ---
 
-  const avatarMap = {
-    Claimant: { emoji: '🧑', cls: 'claimant' },
-    'Third Party': { emoji: '👤', cls: 'third-party' },
-    Witness: { emoji: '👁️', cls: 'witness' },
-    'Insured Driver': { emoji: '🚘', cls: 'insured-driver' },
-  };
+    analyzeBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
 
-  DOM.partiesContainer.innerHTML = parties
-    .map((p) => {
-      const av = avatarMap[p.type] || { emoji: '👤', cls: 'claimant' };
-      const injury = p.injuries && !['none', 'no', 'n/a', ''].includes(p.injuries.toLowerCase())
-        ? `<div class="party-injury">⚠ ${p.injuries}</div>`
-        : '';
-      return `
-        <div class="party-card">
-          <div class="party-avatar ${av.cls}">${av.emoji}</div>
-          <div>
-            <div class="party-name">${escapeHtml(p.name)}</div>
-            <div class="party-type">${escapeHtml(p.type)}</div>
-            ${injury}
-          </div>
-        </div>
-      `;
-    })
-    .join('');
-}
+        // Reset UI
+        hideError();
+        resultsSection.style.display = 'none';
+        analyzeBtn.disabled = true;
+        btnText.textContent = 'Processing...';
+        btnSpinner.style.display = 'inline-block';
 
-function renderAssets(assets) {
-  if (!assets || assets.length === 0) {
-    DOM.assetsContainer.innerHTML = '<div class="field-value missing">No assets extracted</div>';
-    return;
-  }
+        // Show processing steps
+        processingSteps.style.display = 'flex';
+        setStep(1);
 
-  DOM.assetsContainer.innerHTML = assets
-    .map((a) => {
-      const name = [a.year, a.make, a.model].filter(Boolean).join(' ') || a.type || 'Unknown Asset';
-      const damage = a.estimatedDamage != null ? `$${a.estimatedDamage.toLocaleString()}` : '—';
-      return `
-        <div class="asset-card">
-          <div class="asset-icon">🚗</div>
-          <div class="asset-details">
-            <div class="asset-name">${escapeHtml(name)}</div>
-            <div class="asset-id">${escapeHtml(a.id || 'No ID')}</div>
-          </div>
-          <div class="asset-damage">${damage}</div>
-        </div>
-      `;
-    })
-    .join('');
-}
+        const formData = new FormData();
+        formData.append('file', selectedFile);
 
-// JSON viewer
+        try {
+            // Step 1: Parsing
+            await delay(400);
+            setStep(2);
 
-DOM.jsonToggle.addEventListener('click', () => {
-  DOM.jsonToggle.classList.toggle('expanded');
-  DOM.jsonBody.classList.toggle('visible');
-});
+            // Step 2: Extracting
+            const response = await fetch('/api/process', {
+                method: 'POST',
+                body: formData,
+            });
 
-// Utilities
+            setStep(3);
+            await delay(300);
 
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Processing failed');
+            }
+
+            const data = await response.json();
+
+            // Step 3: Done
+            completeSteps();
+            await delay(400);
+
+            renderResults(data);
+
+        } catch (err) {
+            showError(err.message);
+            processingSteps.style.display = 'none';
+        } finally {
+            analyzeBtn.disabled = false;
+            btnText.textContent = 'Analyze Claim';
+            btnSpinner.style.display = 'none';
+        }
+    });
+
+    // --- Processing Steps ---
+
+    function setStep(n) {
+        for (let i = 1; i <= 3; i++) {
+            const el = document.getElementById('step' + i);
+            el.className = 'step';
+            if (i < n) el.classList.add('done');
+            if (i === n) el.classList.add('active');
+        }
+    }
+
+    function completeSteps() {
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById('step' + i).className = 'step done';
+        }
+    }
+
+    // --- Render Results ---
+
+    function renderResults(data) {
+        const fields = data.extractedFields;
+
+        // Policy
+        setText('policyNumber', fields.policy?.policyNumber);
+        setText('policyHolder', fields.policy?.policyholderName);
+        const dateStart = fields.policy?.effectiveDateStart;
+        const dateEnd = fields.policy?.effectiveDateEnd;
+        setText('policyDates', dateStart && dateEnd ? `${dateStart} — ${dateEnd}` : (dateStart || dateEnd || null));
+
+        // Incident
+        const incDate = fields.incident?.date;
+        const incTime = fields.incident?.time;
+        setText('incidentDateTime', incDate || incTime ? `${incDate || '—'} at ${incTime || '—'}` : null);
+        setText('incidentLocation', fields.incident?.location);
+        setText('incidentDescription', fields.incident?.description);
+        const auth = fields.incident?.authorityContacted;
+        const report = fields.incident?.reportNumber;
+        setText('incidentAuthority', auth || report ? `${auth || '—'} / ${report || '—'}` : null);
+
+        // Missing Fields
+        const missingCard = document.getElementById('missingFieldsCard');
+        const missingList = document.getElementById('missingFieldsList');
+        missingList.innerHTML = '';
+        if (data.missingFields && data.missingFields.length > 0) {
+            missingCard.style.display = '';
+            data.missingFields.forEach(f => {
+                const li = document.createElement('li');
+                li.textContent = f;
+                missingList.appendChild(li);
+            });
+        } else {
+            missingCard.style.display = 'none';
+        }
+
+        // Involved Parties
+        const partiesCard = document.getElementById('partiesCard');
+        const partiesBody = document.getElementById('partiesTableBody');
+        partiesBody.innerHTML = '';
+        if (fields.involvedParties && fields.involvedParties.length > 0) {
+            partiesCard.style.display = '';
+            fields.involvedParties.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${esc(p.name || '—')}</td>
+                    <td>${esc(p.role || '—')}</td>
+                    <td>${esc(p.contact || '—')}</td>
+                    <td>${esc(p.injuryDescription || 'None')}</td>
+                `;
+                partiesBody.appendChild(tr);
+            });
+        } else {
+            partiesCard.style.display = 'none';
+        }
+
+        // Assets
+        const assetsCard = document.getElementById('assetsCard');
+        const assetsBody = document.getElementById('assetsTableBody');
+        assetsBody.innerHTML = '';
+        if (fields.assets && fields.assets.length > 0) {
+            assetsCard.style.display = '';
+            fields.assets.forEach(a => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${esc(a.description || '—')}</td>
+                    <td>${esc(a.vin || '—')}</td>
+                    <td>${esc(a.damageDescription || '—')}</td>
+                    <td>${a.estimatedValue != null ? '$' + Number(a.estimatedValue).toLocaleString() : '—'}</td>
+                `;
+                assetsBody.appendChild(tr);
+            });
+        } else {
+            assetsCard.style.display = 'none';
+        }
+
+        // Routing banner
+        const banner = document.getElementById('routingBanner');
+        const badge = document.getElementById('routingBadge');
+        const reasoning = document.getElementById('routingReasoning');
+
+        const route = data.recommendedRoute;
+        const routeClass = route.toLowerCase().replace(/_/g, '-');
+        banner.className = 'routing-banner route-' + routeClass;
+
+        const routeLabels = {
+            'FAST_TRACK': 'Fast Track',
+            'MANUAL_REVIEW': 'Manual Review',
+            'INVESTIGATION': 'Investigation',
+            'SPECIALIST': 'Specialist'
+        };
+        badge.textContent = routeLabels[route] || route;
+        reasoning.textContent = data.reasoning;
+
+        // JSON
+        document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+
+        // Show results
+        resultsSection.style.display = '';
+    }
+
+    function setText(id, value) {
+        document.getElementById(id).textContent = value || '—';
+    }
+
+    function esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // --- JSON Toggle ---
+    document.getElementById('jsonToggle').addEventListener('click', () => {
+        const body = document.getElementById('jsonBody');
+        const chevron = document.querySelector('.chevron');
+        const isOpen = body.style.display !== 'none';
+        body.style.display = isOpen ? 'none' : '';
+        chevron.classList.toggle('open', !isOpen);
+    });
+
+    // --- Error ---
+
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorDisplay.style.display = 'flex';
+    }
+
+    function hideError() {
+        errorDisplay.style.display = 'none';
+    }
+
+    function delay(ms) {
+        return new Promise(r => setTimeout(r, ms));
+    }
+})();

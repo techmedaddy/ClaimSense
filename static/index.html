@@ -1,165 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ClaimSense — Autonomous Insurance Claims Processing Agent. Upload FNOL documents for AI-powered extraction, validation, and routing." />
-  <title>ClaimSense — Autonomous Claims Agent</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaimSense — Claims Processing</title>
+    <meta name="description" content="Autonomous insurance claims processing agent for FNOL document analysis and routing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
 
-  <div class="ambient-bg" aria-hidden="true">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
-
-  <div class="app-container">
-    <header class="app-header">
-      <div class="logo">
-        <div class="logo-icon">🛡️</div>
-        <div class="logo-text">
-          <h1>ClaimSense</h1>
-          <span>Autonomous Claims Agent</span>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="8" fill="#1a56db"/>
+                    <text x="16" y="21" text-anchor="middle" font-family="Inter, sans-serif" font-weight="700" font-size="14" fill="white">CS</text>
+                </svg>
+                <div class="logo-text">
+                    <span class="logo-name">ClaimSense</span>
+                    <span class="logo-tagline">Claims Processing</span>
+                </div>
+            </div>
+            <div class="header-status" id="systemStatus">
+                <span class="status-dot"></span>
+                System Online
+            </div>
         </div>
-      </div>
-      <div class="header-badge">● System Online</div>
     </header>
 
-    <main class="main-grid">
-      <section>
-        <div class="card" id="upload-card">
-          <div class="card-title"><span class="icon">📄</span> Document Upload</div>
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
 
-          <div class="upload-zone" id="upload-zone">
-            <span class="upload-icon">📁</span>
-            <h3>Drop your FNOL document here</h3>
-            <p>or <span class="browse-link" id="browse-trigger">browse files</span></p>
-            <p style="margin-top: 8px; font-size: 0.7rem; color: var(--text-tertiary);">Supports PDF and TXT</p>
-            <input type="file" class="file-input" id="file-input" accept=".pdf,.txt" />
-          </div>
-
-          <div class="file-preview" id="file-preview">
-            <span class="file-icon">📎</span>
-            <div class="file-info">
-              <div class="file-name" id="file-name"></div>
-              <div class="file-size" id="file-size"></div>
+            <!-- Page Title -->
+            <div class="page-header">
+                <h1>Process New Claim</h1>
+                <p>Upload an FNOL document to extract claim data and determine routing.</p>
             </div>
-            <button class="remove-file" id="remove-file" title="Remove file">✕</button>
-          </div>
 
-          <button class="process-btn" id="process-btn" disabled>
-            <span class="btn-content">
-              <span>Analyze Claim</span>
-              <span>→</span>
-            </span>
-          </button>
+            <!-- Upload Section -->
+            <div class="card upload-card">
+                <div class="card-header">
+                    <h2>Document Upload</h2>
+                </div>
+                <div class="card-body">
+                    <div class="dropzone" id="dropzone">
+                        <svg class="dropzone-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p class="dropzone-text">Drag and drop your FNOL document here</p>
+                        <p class="dropzone-sub">or <label for="fileInput" class="dropzone-link">browse files</label></p>
+                        <p class="dropzone-hint">Supports PDF and TXT</p>
+                        <input type="file" id="fileInput" accept=".pdf,.txt" hidden>
+                    </div>
 
-          <div class="error-card" id="error-card">
-            <span class="error-icon">⚠️</span>
-            <div class="error-msg" id="error-msg"></div>
-          </div>
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <div class="file-details">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            <div>
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                            </div>
+                        </div>
+                        <button class="file-remove" id="fileRemove" title="Remove file">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button class="btn-primary" id="analyzeBtn" disabled>
+                        <span id="btnText">Analyze Claim</span>
+                        <span id="btnSpinner" class="spinner" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Processing Steps -->
+            <div class="processing-steps" id="processingSteps" style="display: none;">
+                <div class="step" id="step1">
+                    <div class="step-indicator"></div>
+                    <span>Parsing document</span>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-indicator"></div>
+                    <span>Extracting claim data</span>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-indicator"></div>
+                    <span>Applying routing rules</span>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div class="alert alert-error" id="errorDisplay" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" style="display: none;">
+
+                <!-- Routing Decision Banner -->
+                <div class="routing-banner" id="routingBanner">
+                    <div class="routing-header">
+                        <h2>Routing Decision</h2>
+                        <span class="routing-badge" id="routingBadge"></span>
+                    </div>
+                    <p class="routing-reasoning" id="routingReasoning"></p>
+                </div>
+
+                <!-- Results Grid -->
+                <div class="results-grid">
+
+                    <!-- Policy Info -->
+                    <div class="card">
+                        <div class="card-header"><h2>Policy Information</h2></div>
+                        <div class="card-body">
+                            <dl class="data-list">
+                                <div class="data-row">
+                                    <dt>Policy Number</dt>
+                                    <dd id="policyNumber">—</dd>
+                                </div>
+                                <div class="data-row">
+                                    <dt>Policyholder</dt>
+                                    <dd id="policyHolder">—</dd>
+                                </div>
+                                <div class="data-row">
+                                    <dt>Effective Period</dt>
+                                    <dd id="policyDates">—</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Incident Details -->
+                    <div class="card">
+                        <div class="card-header"><h2>Incident Details</h2></div>
+                        <div class="card-body">
+                            <dl class="data-list">
+                                <div class="data-row">
+                                    <dt>Date &amp; Time</dt>
+                                    <dd id="incidentDateTime">—</dd>
+                                </div>
+                                <div class="data-row">
+                                    <dt>Location</dt>
+                                    <dd id="incidentLocation">—</dd>
+                                </div>
+                                <div class="data-row">
+                                    <dt>Description</dt>
+                                    <dd id="incidentDescription">—</dd>
+                                </div>
+                                <div class="data-row">
+                                    <dt>Authority / Report</dt>
+                                    <dd id="incidentAuthority">—</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Missing Fields -->
+                    <div class="card" id="missingFieldsCard" style="display: none;">
+                        <div class="card-header"><h2>Missing Fields</h2></div>
+                        <div class="card-body">
+                            <ul class="missing-list" id="missingFieldsList"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Involved Parties -->
+                <div class="card" id="partiesCard" style="display: none;">
+                    <div class="card-header"><h2>Involved Parties</h2></div>
+                    <div class="card-body">
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Contact</th>
+                                        <th>Injury</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partiesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assets -->
+                <div class="card" id="assetsCard" style="display: none;">
+                    <div class="card-header"><h2>Assets</h2></div>
+                    <div class="card-body">
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>VIN</th>
+                                        <th>Damage</th>
+                                        <th>Est. Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assetsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw JSON -->
+                <div class="card">
+                    <div class="card-header collapsible" id="jsonToggle">
+                        <h2>Raw JSON Response</h2>
+                        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                    <div class="card-body json-body" id="jsonBody" style="display: none;">
+                        <pre><code id="jsonOutput"></code></pre>
+                    </div>
+                </div>
+
+            </div>
         </div>
-
-        <div class="card processing-overlay" id="processing-overlay">
-          <div class="spinner"></div>
-          <div class="processing-steps">
-            <div class="step-item" id="step-parse">
-              <span class="step-dot"></span>
-              <span>Parsing document...</span>
-            </div>
-            <div class="step-item" id="step-extract">
-              <span class="step-dot"></span>
-              <span>AI extracting claim data...</span>
-            </div>
-            <div class="step-item" id="step-route">
-              <span class="step-dot"></span>
-              <span>Applying routing rules...</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="results-panel" id="results-panel">
-
-        <div class="route-decision" id="route-decision">
-          <div class="route-header">
-            <span class="route-label">Routing Decision</span>
-            <span class="route-badge" id="route-badge"></span>
-          </div>
-          <div class="route-reasoning" id="route-reasoning"></div>
-        </div>
-
-        <div class="data-grid">
-          <div class="card">
-            <div class="card-title"><span class="icon">📋</span> Policy Information</div>
-            <div class="field-group">
-              <div class="field-label">Policy Number</div>
-              <div class="field-value" id="policy-number">—</div>
-            </div>
-            <div class="field-group">
-              <div class="field-label">Policyholder</div>
-              <div class="field-value" id="policy-holder">—</div>
-            </div>
-            <div class="field-group">
-              <div class="field-label">Effective Dates</div>
-              <div class="field-value" id="policy-dates">—</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-title"><span class="icon">🚨</span> Incident Details</div>
-            <div class="field-group">
-              <div class="field-label">Date & Time</div>
-              <div class="field-value" id="incident-datetime">—</div>
-            </div>
-            <div class="field-group">
-              <div class="field-label">Location</div>
-              <div class="field-value" id="incident-location">—</div>
-            </div>
-            <div class="field-group">
-              <div class="field-label">Description</div>
-              <div class="field-value" id="incident-desc">—</div>
-            </div>
-            <div class="field-group">
-              <div class="field-label">Authority / Report #</div>
-              <div class="field-value" id="incident-authority">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-bottom: 20px;">
-          <div class="card-title"><span class="icon">🔍</span> Missing Fields</div>
-          <div id="missing-fields-container"></div>
-        </div>
-
-        <div class="data-grid">
-          <div class="card">
-            <div class="card-title"><span class="icon">👥</span> Involved Parties</div>
-            <div id="parties-container"></div>
-          </div>
-
-          <div class="card">
-            <div class="card-title"><span class="icon">🚗</span> Assets</div>
-            <div id="assets-container"></div>
-          </div>
-        </div>
-
-        <div style="margin-top: 24px;">
-          <button class="json-toggle" id="json-toggle">
-            <span>View Raw JSON Response</span>
-            <span class="chevron">▼</span>
-          </button>
-          <div class="json-body" id="json-body">
-            <pre id="json-content"></pre>
-          </div>
-        </div>
-      </section>
     </main>
-  </div>
 
-  <script src="/static/app.js"></script>
+    <footer class="footer">
+        <p>ClaimSense &mdash; Autonomous Claims Processing Agent</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
 </body>
 </html>
