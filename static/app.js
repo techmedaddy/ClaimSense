@@ -20,38 +20,58 @@
     const claimsBody = document.getElementById('claimsBody');
     const jsonOutput = document.getElementById('jsonOutput');
 
+    let currentFilter = null; // null means show all
+
     // ===== Sidebar Navigation =====
-    document.querySelectorAll('.nav-item[data-tab]').forEach(item => {
+    document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            const tab = item.dataset.tab;
-            document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
-            if (tab === 'upload') {
-                activateTab('uploadPanel');
-            } else {
+            if (item.hasAttribute('data-tab')) {
+                const tab = item.dataset.tab;
+                currentFilter = null; // clear filter on tab change
+                if (tab === 'upload') {
+                    activateTab('uploadPanel');
+                } else {
+                    activateTab('queue');
+                }
+            } else if (item.hasAttribute('data-filter')) {
+                currentFilter = item.dataset.filter;
                 activateTab('queue');
             }
+            updateTable(); // re-render table with or without filter
         });
     });
 
     // Top bar buttons
     document.getElementById('topUploadBtn').addEventListener('click', () => {
         activateTab('uploadPanel');
-        document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+        currentFilter = null;
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.querySelector('.nav-item[data-tab="upload"]').classList.add('active');
+        updateTable();
     });
 
     document.getElementById('topProcessBtn').addEventListener('click', () => {
         activateTab('queue');
-        document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+        currentFilter = null;
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.querySelector('.nav-item[data-tab="dashboard"]').classList.add('active');
+        updateTable();
     });
 
     // ===== Tabs =====
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
+            if (tab.dataset.panel === 'queue') {
+                currentFilter = null; // Clear filter if main queue tab is clicked
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelector('.nav-item[data-tab="dashboard"]').classList.add('active');
+                updateTable();
+            }
             activateTab(tab.dataset.panel);
         });
     });
@@ -227,13 +247,18 @@
 
     // ===== Update Table =====
     function updateTable() {
-        if (claims.length === 0) {
-            claimsBody.innerHTML = '<tr class="empty-row"><td colspan="6">No claims processed yet.</td></tr>';
+        const filteredClaims = currentFilter 
+            ? claims.filter(c => c.data.recommendedRoute === currentFilter)
+            : claims;
+
+        if (filteredClaims.length === 0) {
+            const msg = currentFilter ? `No claims found in the ${currentFilter.replace('_', ' ').toLowerCase()} queue.` : 'No claims processed yet.';
+            claimsBody.innerHTML = `<tr class="empty-row"><td colspan="6">${msg}</td></tr>`;
             return;
         }
 
         claimsBody.innerHTML = '';
-        claims.forEach((claim, idx) => {
+        filteredClaims.forEach((claim, idx) => {
             const d = claim.data;
             const fields = d.extractedFields;
             const route = d.recommendedRoute;
