@@ -52,43 +52,29 @@ body {
 }
 
 .sidebar-brand {
+    padding: 24px 20px 16px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 20px 16px 24px;
-}
-
-.brand-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--primary);
-    color: white;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 12px;
-    flex-shrink: 0;
+    align-items: center;
 }
 
-.brand-name {
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.2;
+.sidebar-brand-link {
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    transition: opacity var(--transition);
 }
 
-.brand-sub {
-    font-size: 11px;
-    color: var(--text-ter);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+.sidebar-brand-link:hover {
+    opacity: 0.8;
 }
 
-.brand-text {
-    display: flex;
-    flex-direction: column;
+.brand-logo-svg {
+    width: 100%;
+    max-width: 72px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 /* Sidebar Nav */
