@@ -491,6 +491,46 @@ body {
 .dropzone-link:hover { text-decoration: underline; }
 .dropzone-hint { font-size: 12px; color: var(--text-ter); margin-top: 8px; }
 
+.sample-files {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.sample-files h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sec);
+    margin-bottom: 12px;
+}
+
+.sample-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sample-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-sec);
+    text-decoration: none;
+    transition: all var(--transition);
+}
+
+.sample-link:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
 .file-info {
     display: flex;
     align-items: center;
