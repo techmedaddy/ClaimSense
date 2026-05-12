@@ -1,4 +1,10 @@
 (() => {
+    // ===== State =====
+    const claims = []; // in-memory store of processed claims
+    let selectedFile = null;
+    let claimCounter = 0;
+
+    // ===== DOM =====
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const fileInfo = document.getElementById('fileInfo');
@@ -8,15 +14,60 @@
     const analyzeBtn = document.getElementById('analyzeBtn');
     const btnText = document.getElementById('btnText');
     const btnSpinner = document.getElementById('btnSpinner');
-    const processingSteps = document.getElementById('processingSteps');
     const errorDisplay = document.getElementById('errorDisplay');
     const errorText = document.getElementById('errorText');
-    const resultsSection = document.getElementById('resultsSection');
+    const pipeline = document.getElementById('pipeline');
+    const claimsBody = document.getElementById('claimsBody');
+    const jsonOutput = document.getElementById('jsonOutput');
 
-    let selectedFile = null;
+    // ===== Sidebar Navigation =====
+    document.querySelectorAll('.nav-item[data-tab]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tab = item.dataset.tab;
+            document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
 
-    // --- File Selection ---
+            if (tab === 'upload') {
+                activateTab('uploadPanel');
+            } else {
+                activateTab('queue');
+            }
+        });
+    });
 
+    // Top bar buttons
+    document.getElementById('topUploadBtn').addEventListener('click', () => {
+        activateTab('uploadPanel');
+        document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+        document.querySelector('.nav-item[data-tab="upload"]').classList.add('active');
+    });
+
+    document.getElementById('topProcessBtn').addEventListener('click', () => {
+        activateTab('queue');
+        document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+        document.querySelector('.nav-item[data-tab="dashboard"]').classList.add('active');
+    });
+
+    // ===== Tabs =====
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            activateTab(tab.dataset.panel);
+        });
+    });
+
+    function activateTab(panelName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+
+        const matchingTab = document.querySelector(`.tab[data-panel="${panelName}"]`);
+        if (matchingTab) matchingTab.classList.add('active');
+
+        const panel = document.getElementById(panelName + 'Panel');
+        if (panel) panel.style.display = '';
+    }
+
+    // ===== File Handling =====
     dropzone.addEventListener('click', () => fileInput.click());
 
     dropzone.addEventListener('dragover', (e) => {
@@ -24,27 +75,19 @@
         dropzone.classList.add('active');
     });
 
-    dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('active');
-    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
 
     dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropzone.classList.remove('active');
-        if (e.dataTransfer.files.length) {
-            handleFile(e.dataTransfer.files[0]);
-        }
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
 
     fileInput.addEventListener('change', () => {
-        if (fileInput.files.length) {
-            handleFile(fileInput.files[0]);
-        }
+        if (fileInput.files.length) handleFile(fileInput.files[0]);
     });
 
-    fileRemove.addEventListener('click', () => {
-        clearFile();
-    });
+    fileRemove.addEventListener('click', clearFile);
 
     function handleFile(file) {
         const ext = file.name.split('.').pop().toLowerCase();
@@ -75,38 +118,35 @@
         return (bytes / 1048576).toFixed(1) + ' MB';
     }
 
-    // --- Analysis ---
-
+    // ===== Analysis =====
     analyzeBtn.addEventListener('click', async () => {
         if (!selectedFile) return;
 
-        // Reset UI
         hideError();
-        resultsSection.style.display = 'none';
         analyzeBtn.disabled = true;
         btnText.textContent = 'Processing...';
         btnSpinner.style.display = 'inline-block';
 
-        // Show processing steps
-        processingSteps.style.display = 'flex';
-        setStep(1);
+        // Show pipeline
+        pipeline.style.display = 'flex';
+        resetPipeline();
+        setPipeStep(1); // Ingest
 
         const formData = new FormData();
         formData.append('file', selectedFile);
+        const startTime = Date.now();
 
         try {
-            // Step 1: Parsing
-            await delay(400);
-            setStep(2);
+            await delay(300);
+            setPipeStep(2); // Extract
 
-            // Step 2: Extracting
             const response = await fetch('/api/process', {
                 method: 'POST',
                 body: formData,
             });
 
-            setStep(3);
-            await delay(300);
+            setPipeStep(3); // Validate
+            await delay(200);
 
             if (!response.ok) {
                 const err = await response.json();
@@ -115,15 +155,42 @@
 
             const data = await response.json();
 
-            // Step 3: Done
-            completeSteps();
-            await delay(400);
+            setPipeStep(4); // Route
+            await delay(200);
+            setPipeStep(5); // Complete
 
-            renderResults(data);
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+            // Store claim
+            claimCounter++;
+            const claimId = 'CLM-2025-' + String(claimCounter).padStart(4, '0');
+            const claim = {
+                id: claimId,
+                data: data,
+                fileName: selectedFile.name,
+                timestamp: new Date(),
+                processingTime: elapsed
+            };
+            claims.push(claim);
+
+            // Update everything
+            updateTable();
+            updateStats();
+            updateQueueCounts();
+            jsonOutput.textContent = JSON.stringify(data, null, 2);
+
+            // Switch to queue tab to show result
+            setTimeout(() => {
+                activateTab('queue');
+                document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
+                document.querySelector('.nav-item[data-tab="dashboard"]').classList.add('active');
+            }, 600);
+
+            clearFile();
 
         } catch (err) {
             showError(err.message);
-            processingSteps.style.display = 'none';
+            pipeline.style.display = 'none';
         } finally {
             analyzeBtn.disabled = false;
             btnText.textContent = 'Analyze Claim';
@@ -131,153 +198,241 @@
         }
     });
 
-    // --- Processing Steps ---
+    // ===== Pipeline Steps =====
+    const pipeSteps = ['pipeIngest', 'pipeExtract', 'pipeValidate', 'pipeRoute', 'pipeComplete'];
+    const pipeLines = ['pipeLine1', 'pipeLine2', 'pipeLine3', 'pipeLine4'];
 
-    function setStep(n) {
-        for (let i = 1; i <= 3; i++) {
-            const el = document.getElementById('step' + i);
-            el.className = 'step';
-            if (i < n) el.classList.add('done');
-            if (i === n) el.classList.add('active');
+    function resetPipeline() {
+        pipeSteps.forEach(id => {
+            document.getElementById(id).className = 'pipeline-step';
+        });
+        pipeLines.forEach(id => {
+            document.getElementById(id).className = 'pipeline-line';
+        });
+    }
+
+    function setPipeStep(n) {
+        for (let i = 0; i < pipeSteps.length; i++) {
+            const el = document.getElementById(pipeSteps[i]);
+            el.className = 'pipeline-step';
+            if (i < n - 1) el.classList.add('done');
+            if (i === n - 1) el.classList.add('active');
+        }
+        for (let i = 0; i < pipeLines.length; i++) {
+            const el = document.getElementById(pipeLines[i]);
+            el.className = 'pipeline-line';
+            if (i < n - 1) el.classList.add('done');
         }
     }
 
-    function completeSteps() {
-        for (let i = 1; i <= 3; i++) {
-            document.getElementById('step' + i).className = 'step done';
+    // ===== Update Table =====
+    function updateTable() {
+        if (claims.length === 0) {
+            claimsBody.innerHTML = '<tr class="empty-row"><td colspan="6">No claims processed yet.</td></tr>';
+            return;
         }
+
+        claimsBody.innerHTML = '';
+        claims.forEach((claim, idx) => {
+            const d = claim.data;
+            const fields = d.extractedFields;
+            const route = d.recommendedRoute;
+            const routeClass = route.toLowerCase().replace(/_/g, '-');
+
+            const routeLabels = {
+                'FAST_TRACK': 'Fast-track',
+                'MANUAL_REVIEW': 'Manual Review',
+                'INVESTIGATION': 'Investigation',
+                'SPECIALIST': 'Specialist'
+            };
+
+            const statusMap = {
+                'FAST_TRACK': { label: 'Processed', color: 'var(--green)' },
+                'MANUAL_REVIEW': { label: 'Review', color: 'var(--yellow)' },
+                'INVESTIGATION': { label: 'Flagged', color: 'var(--red)' },
+                'SPECIALIST': { label: 'Assigned', color: 'var(--blue)' }
+            };
+
+            const status = statusMap[route] || { label: 'Processed', color: 'var(--green)' };
+            const holder = fields.policy?.policyholderName || 'Unknown';
+            const damage = fields.initialEstimate != null
+                ? '$' + Number(fields.initialEstimate).toLocaleString()
+                : '—';
+
+            // Determine type from assets or injuries
+            let type = 'Document';
+            if (fields.involvedParties?.some(p => p.injuryDescription)) type = 'Injury';
+            else if (fields.assets?.length > 0) type = 'Vehicle';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="claim-id">${esc(claim.id)}</span></td>
+                <td>${esc(holder)}</td>
+                <td>${esc(type)}</td>
+                <td>${damage}</td>
+                <td><span class="status-indicator"><span class="status-dot" style="background:${status.color}"></span>${esc(status.label)}</span></td>
+                <td><span class="route-badge ${routeClass}">${esc(routeLabels[route] || route)}</span></td>
+            `;
+            tr.addEventListener('click', () => openClaimModal(claim));
+            claimsBody.appendChild(tr);
+        });
     }
 
-    // --- Render Results ---
+    // ===== Update Stats =====
+    function updateStats() {
+        document.getElementById('statTotal').textContent = claims.length;
+        document.getElementById('statTotalSub').textContent =
+            claims.length === 1 ? '1 claim processed' : claims.length + ' claims processed';
 
-    function renderResults(data) {
-        const fields = data.extractedFields;
-
-        // Policy
-        setText('policyNumber', fields.policy?.policyNumber);
-        setText('policyHolder', fields.policy?.policyholderName);
-        const dateStart = fields.policy?.effectiveDateStart;
-        const dateEnd = fields.policy?.effectiveDateEnd;
-        setText('policyDates', dateStart && dateEnd ? `${dateStart} — ${dateEnd}` : (dateStart || dateEnd || null));
-
-        // Incident
-        const incDate = fields.incident?.date;
-        const incTime = fields.incident?.time;
-        setText('incidentDateTime', incDate || incTime ? `${incDate || '—'} at ${incTime || '—'}` : null);
-        setText('incidentLocation', fields.incident?.location);
-        setText('incidentDescription', fields.incident?.description);
-        const auth = fields.incident?.authorityContacted;
-        const report = fields.incident?.reportNumber;
-        setText('incidentAuthority', auth || report ? `${auth || '—'} / ${report || '—'}` : null);
-
-        // Missing Fields
-        const missingCard = document.getElementById('missingFieldsCard');
-        const missingList = document.getElementById('missingFieldsList');
-        missingList.innerHTML = '';
-        if (data.missingFields && data.missingFields.length > 0) {
-            missingCard.style.display = '';
-            data.missingFields.forEach(f => {
-                const li = document.createElement('li');
-                li.textContent = f;
-                missingList.appendChild(li);
-            });
-        } else {
-            missingCard.style.display = 'none';
+        // Avg time
+        if (claims.length > 0) {
+            const avg = claims.reduce((s, c) => s + parseFloat(c.processingTime), 0) / claims.length;
+            document.getElementById('statAvgTime').textContent = avg.toFixed(1) + 's';
         }
 
-        // Involved Parties
-        const partiesCard = document.getElementById('partiesCard');
-        const partiesBody = document.getElementById('partiesTableBody');
-        partiesBody.innerHTML = '';
-        if (fields.involvedParties && fields.involvedParties.length > 0) {
-            partiesCard.style.display = '';
-            fields.involvedParties.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${esc(p.name || '—')}</td>
-                    <td>${esc(p.role || '—')}</td>
-                    <td>${esc(p.contact || '—')}</td>
-                    <td>${esc(p.injuryDescription || 'None')}</td>
-                `;
-                partiesBody.appendChild(tr);
-            });
+        // Pending review
+        const pending = claims.filter(c =>
+            c.data.recommendedRoute === 'MANUAL_REVIEW' || c.data.recommendedRoute === 'INVESTIGATION'
+        ).length;
+        document.getElementById('statPending').textContent = pending;
+        const pendingSub = document.getElementById('statPendingSub');
+        if (pending > 0) {
+            pendingSub.textContent = 'Missing fields';
+            pendingSub.className = 'stat-sub warning';
         } else {
-            partiesCard.style.display = 'none';
+            pendingSub.textContent = '—';
+            pendingSub.className = 'stat-sub';
         }
 
-        // Assets
-        const assetsCard = document.getElementById('assetsCard');
-        const assetsBody = document.getElementById('assetsTableBody');
-        assetsBody.innerHTML = '';
-        if (fields.assets && fields.assets.length > 0) {
-            assetsCard.style.display = '';
-            fields.assets.forEach(a => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${esc(a.description || '—')}</td>
-                    <td>${esc(a.vin || '—')}</td>
-                    <td>${esc(a.damageDescription || '—')}</td>
-                    <td>${a.estimatedValue != null ? '$' + Number(a.estimatedValue).toLocaleString() : '—'}</td>
-                `;
-                assetsBody.appendChild(tr);
-            });
-        } else {
-            assetsCard.style.display = 'none';
-        }
+        // Auto-routed
+        const autoRouted = claims.filter(c => c.data.recommendedRoute === 'FAST_TRACK').length;
+        const pct = claims.length > 0 ? Math.round((autoRouted / claims.length) * 100) : 0;
+        document.getElementById('statAutoRouted').textContent = pct + '%';
+        document.getElementById('statAutoSub').textContent =
+            claims.length > 0 ? autoRouted + ' of ' + claims.length : '—';
 
-        // Routing banner
-        const banner = document.getElementById('routingBanner');
-        const badge = document.getElementById('routingBadge');
-        const reasoning = document.getElementById('routingReasoning');
+        // Claim count badge
+        document.getElementById('claimCount').textContent = claims.length;
+    }
 
-        const route = data.recommendedRoute;
+    // ===== Update Queue Counts =====
+    function updateQueueCounts() {
+        const counts = { FAST_TRACK: 0, MANUAL_REVIEW: 0, INVESTIGATION: 0, SPECIALIST: 0 };
+        claims.forEach(c => {
+            if (counts[c.data.recommendedRoute] !== undefined) {
+                counts[c.data.recommendedRoute]++;
+            }
+        });
+        document.getElementById('qFastTrack').textContent = counts.FAST_TRACK;
+        document.getElementById('qManualReview').textContent = counts.MANUAL_REVIEW;
+        document.getElementById('qInvestigation').textContent = counts.INVESTIGATION;
+        document.getElementById('qSpecialist').textContent = counts.SPECIALIST;
+    }
+
+    // ===== Claim Detail Modal =====
+    const modal = document.getElementById('claimModal');
+    const modalBody = document.getElementById('modalBody');
+    const modalTitle = document.getElementById('modalTitle');
+
+    document.getElementById('modalClose').addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+
+    function openClaimModal(claim) {
+        const d = claim.data;
+        const fields = d.extractedFields;
+        const route = d.recommendedRoute;
         const routeClass = route.toLowerCase().replace(/_/g, '-');
-        banner.className = 'routing-banner route-' + routeClass;
-
         const routeLabels = {
-            'FAST_TRACK': 'Fast Track',
+            'FAST_TRACK': 'Fast-track',
             'MANUAL_REVIEW': 'Manual Review',
             'INVESTIGATION': 'Investigation',
             'SPECIALIST': 'Specialist'
         };
-        badge.textContent = routeLabels[route] || route;
-        reasoning.textContent = data.reasoning;
 
-        // JSON
-        document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+        modalTitle.textContent = claim.id;
 
-        // Show results
-        resultsSection.style.display = '';
+        let html = '';
+
+        // Routing banner
+        html += `<div class="routing-banner-modal ${routeClass}">
+            <div class="rb-title">Route: ${esc(routeLabels[route] || route)}</div>
+            <div class="rb-reason">${esc(d.reasoning)}</div>
+        </div>`;
+
+        // Policy
+        html += `<div class="detail-section">
+            <h3>Policy Information</h3>
+            <div class="detail-grid">
+                <dl class="detail-item"><dt>Policy Number</dt><dd>${esc(fields.policy?.policyNumber || '—')}</dd></dl>
+                <dl class="detail-item"><dt>Policyholder</dt><dd>${esc(fields.policy?.policyholderName || '—')}</dd></dl>
+                <dl class="detail-item"><dt>Effective Start</dt><dd>${esc(fields.policy?.effectiveDateStart || '—')}</dd></dl>
+                <dl class="detail-item"><dt>Effective End</dt><dd>${esc(fields.policy?.effectiveDateEnd || '—')}</dd></dl>
+            </div>
+        </div>`;
+
+        // Incident
+        html += `<div class="detail-section">
+            <h3>Incident Details</h3>
+            <div class="detail-grid">
+                <dl class="detail-item"><dt>Date</dt><dd>${esc(fields.incident?.date || '—')}</dd></dl>
+                <dl class="detail-item"><dt>Time</dt><dd>${esc(fields.incident?.time || '—')}</dd></dl>
+                <dl class="detail-item detail-full"><dt>Location</dt><dd>${esc(fields.incident?.location || '—')}</dd></dl>
+                <dl class="detail-item detail-full"><dt>Description</dt><dd>${esc(fields.incident?.description || '—')}</dd></dl>
+                <dl class="detail-item"><dt>Authority</dt><dd>${esc(fields.incident?.authorityContacted || '—')}</dd></dl>
+                <dl class="detail-item"><dt>Report #</dt><dd>${esc(fields.incident?.reportNumber || '—')}</dd></dl>
+            </div>
+        </div>`;
+
+        // Parties
+        if (fields.involvedParties && fields.involvedParties.length > 0) {
+            html += `<div class="detail-section"><h3>Involved Parties</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Role</th><th>Injury</th></tr></thead><tbody>`;
+            fields.involvedParties.forEach(p => {
+                html += `<tr><td>${esc(p.name || '—')}</td><td>${esc(p.role || '—')}</td><td>${esc(p.injuryDescription || 'None')}</td></tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        }
+
+        // Assets
+        if (fields.assets && fields.assets.length > 0) {
+            html += `<div class="detail-section"><h3>Assets</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Description</th><th>VIN</th><th>Damage</th></tr></thead><tbody>`;
+            fields.assets.forEach(a => {
+                html += `<tr><td>${esc(a.description || '—')}</td><td>${esc(a.vin || '—')}</td><td>${esc(a.damageDescription || '—')}</td></tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        }
+
+        // Missing Fields
+        if (d.missingFields && d.missingFields.length > 0) {
+            html += `<div class="detail-section"><h3>Missing Fields (${d.missingFields.length})</h3><ul style="list-style:none;display:flex;flex-direction:column;gap:4px;">`;
+            d.missingFields.forEach(f => {
+                html += `<li style="font-size:12px;color:var(--yellow);background:var(--yellow-bg);padding:4px 10px;border-radius:4px;">${esc(f)}</li>`;
+            });
+            html += `</ul></div>`;
+        }
+
+        modalBody.innerHTML = html;
+        modal.style.display = 'flex';
     }
 
-    function setText(id, value) {
-        document.getElementById(id).textContent = value || '—';
+    // ===== Utilities =====
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorDisplay.style.display = 'block';
+    }
+
+    function hideError() {
+        errorDisplay.style.display = 'none';
     }
 
     function esc(str) {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
-    }
-
-    // --- JSON Toggle ---
-    document.getElementById('jsonToggle').addEventListener('click', () => {
-        const body = document.getElementById('jsonBody');
-        const chevron = document.querySelector('.chevron');
-        const isOpen = body.style.display !== 'none';
-        body.style.display = isOpen ? 'none' : '';
-        chevron.classList.toggle('open', !isOpen);
-    });
-
-    // --- Error ---
-
-    function showError(msg) {
-        errorText.textContent = msg;
-        errorDisplay.style.display = 'flex';
-    }
-
-    function hideError() {
-        errorDisplay.style.display = 'none';
     }
 
     function delay(ms) {
