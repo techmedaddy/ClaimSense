@@ -15,7 +15,7 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <a href="/" class="sidebar-brand-link">
+        <a href="#/dashboard" class="sidebar-brand-link">
             <div class="sidebar-brand">
                 <svg viewBox="0 0 200 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="brand-logo-svg">
                     <defs>
@@ -41,12 +41,12 @@
         <nav class="sidebar-nav">
             <div class="nav-section">
                 <span class="nav-label">Workspace</span>
-                <a href="#" class="nav-item active" data-tab="dashboard">
+                <a href="#/dashboard" class="nav-item active" data-tab="dashboard">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     Dashboard
                     <span class="nav-badge" id="claimCount">0</span>
                 </a>
-                <a href="#" class="nav-item" data-tab="upload">
+                <a href="#/upload" class="nav-item" data-tab="upload">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Upload FNOL
                 </a>
@@ -54,22 +54,22 @@
 
             <div class="nav-section">
                 <span class="nav-label">Queues</span>
-                <a href="#" class="nav-item queue-item" data-filter="FAST_TRACK">
+                <a href="#/queue/FAST_TRACK" class="nav-item queue-item" data-filter="FAST_TRACK">
                     <span class="queue-dot dot-green"></span>
                     Fast-track
                     <span class="nav-badge" id="qFastTrack">0</span>
                 </a>
-                <a href="#" class="nav-item queue-item" data-filter="MANUAL_REVIEW">
+                <a href="#/queue/MANUAL_REVIEW" class="nav-item queue-item" data-filter="MANUAL_REVIEW">
                     <span class="queue-dot dot-yellow"></span>
                     Manual Review
                     <span class="nav-badge" id="qManualReview">0</span>
                 </a>
-                <a href="#" class="nav-item queue-item" data-filter="INVESTIGATION">
+                <a href="#/queue/INVESTIGATION" class="nav-item queue-item" data-filter="INVESTIGATION">
                     <span class="queue-dot dot-red"></span>
                     Investigation
                     <span class="nav-badge" id="qInvestigation">0</span>
                 </a>
-                <a href="#" class="nav-item queue-item" data-filter="SPECIALIST">
+                <a href="#/queue/SPECIALIST" class="nav-item queue-item" data-filter="SPECIALIST">
                     <span class="queue-dot dot-blue"></span>
                     Specialist
                     <span class="nav-badge" id="qSpecialist">0</span>
@@ -81,12 +81,11 @@
     <!-- Main Content -->
     <div class="main-wrapper">
 
-        <!-- Top Bar -->
         <header class="topbar">
             <h1 class="topbar-title">Claims Processing Dashboard</h1>
             <div class="topbar-actions">
                 <button class="btn-secondary" id="topUploadBtn">Upload FNOL</button>
-                <button class="btn-primary" id="topProcessBtn">Process Queue</button>
+                <button class="btn-primary" id="topProcessBtn">View All Claims</button>
             </div>
         </header>
 
@@ -268,6 +267,6 @@
         </main>
     </div>
 
-    <script src="/static/app.js?v=2"></script>
+    <script src="/static/app.js?v=4"></script>
 </body>
 </html>

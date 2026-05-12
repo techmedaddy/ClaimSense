@@ -1,8 +1,19 @@
 (() => {
     // ===== State =====
-    const claims = []; // in-memory store of processed claims
+    let claims = []; // in-memory store of processed claims
     let selectedFile = null;
     let claimCounter = 0;
+
+    // Load from local storage
+    try {
+        const stored = localStorage.getItem('claimsense_claims');
+        if (stored) {
+            claims = JSON.parse(stored);
+            claimCounter = claims.length;
+        }
+    } catch (e) {
+        console.error("Failed to load claims from local storage", e);
+    }
 
     // ===== DOM =====
     const dropzone = document.getElementById('dropzone');
@@ -22,45 +33,44 @@
 
     let currentFilter = null; // null means show all
 
-    // ===== Sidebar Navigation =====
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
+    // ===== Routing =====
+    function handleRouteChange() {
+        const hash = window.location.hash || '#/dashboard';
+        currentFilter = null; // default clear
 
-            if (item.hasAttribute('data-tab')) {
-                const tab = item.dataset.tab;
-                currentFilter = null; // clear filter on tab change
-                if (tab === 'upload') {
-                    activateTab('uploadPanel');
-                } else {
-                    activateTab('queue');
-                }
-            } else if (item.hasAttribute('data-filter')) {
-                currentFilter = item.dataset.filter;
-                activateTab('queue');
-            }
-            updateTable(); // re-render table with or without filter
-        });
-    });
-
-    // Top bar buttons
-    document.getElementById('topUploadBtn').addEventListener('click', () => {
-        activateTab('uploadPanel');
-        currentFilter = null;
+        // Reset nav highlights
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.querySelector('.nav-item[data-tab="upload"]').classList.add('active');
+
+        if (hash === '#/upload') {
+            activateTab('uploadPanel');
+            const nav = document.querySelector('.nav-item[data-tab="upload"]');
+            if (nav) nav.classList.add('active');
+        } else if (hash.startsWith('#/queue/')) {
+            const queueFilter = hash.split('#/queue/')[1];
+            currentFilter = queueFilter;
+            activateTab('queue');
+            const nav = document.querySelector(`.nav-item[data-filter="${queueFilter}"]`);
+            if (nav) nav.classList.add('active');
+        } else {
+            // Default to dashboard
+            activateTab('queue');
+            const nav = document.querySelector('.nav-item[data-tab="dashboard"]');
+            if (nav) nav.classList.add('active');
+        }
+
         updateTable();
+    }
+
+    // Listen for URL changes
+    window.addEventListener('hashchange', handleRouteChange);
+
+    // Top bar buttons - just change the URL now!
+    document.getElementById('topUploadBtn').addEventListener('click', () => {
+        window.location.hash = '#/upload';
     });
 
     document.getElementById('topProcessBtn').addEventListener('click', () => {
-        activateTab('queue');
-        currentFilter = null;
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.querySelector('.nav-item[data-tab="dashboard"]').classList.add('active');
-        updateTable();
+        window.location.hash = '#/dashboard';
     });
 
     // ===== Tabs =====
@@ -193,17 +203,22 @@
             };
             claims.push(claim);
 
+            // Persist to local storage
+            try {
+                localStorage.setItem('claimsense_claims', JSON.stringify(claims));
+            } catch (e) {
+                console.error("Failed to save to local storage", e);
+            }
+
             // Update everything
             updateTable();
             updateStats();
             updateQueueCounts();
             jsonOutput.textContent = JSON.stringify(data, null, 2);
 
-            // Switch to queue tab to show result
+            // Switch to dashboard tab to show result via routing
             setTimeout(() => {
-                activateTab('queue');
-                document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.classList.remove('active'));
-                document.querySelector('.nav-item[data-tab="dashboard"]').classList.add('active');
+                window.location.hash = '#/dashboard';
             }, 600);
 
             clearFile();
@@ -463,4 +478,9 @@
     function delay(ms) {
         return new Promise(r => setTimeout(r, ms));
     }
+
+    // ===== Initial Render =====
+    updateTable();
+    updateStats();
+    updateQueueCounts();
 })();
