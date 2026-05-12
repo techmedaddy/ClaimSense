@@ -62,16 +62,16 @@ class ExtractionAgent:
             )
 
             # Extract the string content
-            content = completion.choices[0].message.content
+            content = completion.choices[0].message.content.strip()
             
-            # Clean up markdown code blocks if the model wrapped the JSON
-            if content.startswith("```json"):
-                content = content.replace("```json", "", 1)
-            if content.endswith("```"):
-                content = content[:-3]
+            # Clean up markdown code blocks using regex
+            import re
+            json_match = re.search(r"```(?:json)?\s*(.*?)\s*```", content, re.DOTALL)
+            if json_match:
+                content = json_match.group(1)
             
             # Parse and validate against our Pydantic model
-            parsed_data = json.loads(content.strip())
+            parsed_data = json.loads(content)
             return ExtractionResultSchema.model_validate(parsed_data)
 
         except json.JSONDecodeError as e:
