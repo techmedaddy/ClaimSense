@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from services.document_parser import DocumentParser
+from services.extraction_agent import ExtractionAgent
 
 # Load environment variables
 load_dotenv()
@@ -24,8 +25,22 @@ def main():
         print('\n--- Extraction Successful ---')
         print(f"Total extracted length: {len(extracted_text)} characters.")
         
+        print('\n--- Phase 3: Testing AI Extraction Engine ---')
+        # Initialize the AI Agent
+        agent = ExtractionAgent()
+        
+        print("Sending raw text to AI for structured extraction...")
+        # In a real run, this requires OPENAI_API_KEY to be set in .env
+        if not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_API_KEY") == "your_openai_key_here":
+            print("⚠️ WARNING: OPENAI_API_KEY is not set in .env. Skipping actual API call to prevent crash.")
+            print("Please add your API key to the .env file to see the AI extraction in action.")
+        else:
+            result = agent.extract_claim_data(extracted_text)
+            print("\n--- AI Extraction Result (JSON) ---")
+            print(result.model_dump_json(indent=2))
+        
     except Exception as e:
-        print(f"Error during document ingestion: {e}")
+        print(f"Error during execution: {e}")
 
 if __name__ == '__main__':
     main()
