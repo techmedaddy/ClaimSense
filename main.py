@@ -27,8 +27,8 @@ def main():
         router = RoutingEngine()
         
         print("Sending raw text to AI for structured extraction...")
-        if not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_API_KEY") == "your_openai_key_here":
-            print("⚠️ WARNING: OPENAI_API_KEY is not set in .env.")
+        if not os.getenv("GOOGLE_AI_API_KEY"):
+            print("⚠️ WARNING: GOOGLE_AI_API_KEY is not set in .env.")
             print("To see the full pipeline, please add your API key.")
         else:
             # Phase 3: Extract
