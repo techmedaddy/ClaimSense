@@ -51,16 +51,19 @@ class ExtractionAgent:
                     {"role": "user", "content": f"Extract data strictly according to this JSON Schema:\n{json.dumps(schema_json)}\n\nHere is the document text:\n\n{raw_text}"}
                 ],
                 temperature=0.0,
-                max_tokens=1024,
+                max_tokens=4096,
             )
 
             content = completion.choices[0].message.content.strip()
             
-            # Accept fenced JSON from chat-style responses.
-            import re
-            json_match = re.search(r"```(?:json)?\s*(.*?)\s*```", content, re.DOTALL)
-            if json_match:
-                content = json_match.group(1)
+            # Remove markdown JSON fences (e.g., ```json ... ```) safely
+            if content.startswith("```"):
+                lines = content.splitlines()
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                content = "\n".join(lines).strip()
             
             parsed_data = json.loads(content)
             return ExtractionResultSchema.model_validate(parsed_data)
